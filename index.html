@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Car Game</title>
+</head>
+<body onkeydown="movePlayer(event);">
+<canvas id=mygame width=800 height=600 style="border:1px solid blue;margin-left:200px;background-color:pink;">
+Your browser does not support canvas element.
+</canvas>
+<hr/>
+<button id=start type=button align=center onclick="startGame();"
+	style="width:100px;margin-left:40%;">Start</button>
+<img id=carleft src="images/car-left.png" style="display:none;">
+<img id=carright src="images/car-right.png" style="display:none;">
+<img id=carup src="images/car-up.png" style="display:none;">
+<img id=cardown src="images/car-down.png" style="display:none;">
+
+<script>
+var nBars = 10;
+var imgSize =50;
+var barDistance = 4*imgSize;
+var barMinGap = 2*imgSize;
+var barWidth = 10;
+var barSpeed = 5;
+var playerSpeed = 10;
+var barPosition = [];
+var barLength1 = [];
+var barLength2 = [];
+var lastBar = nBars-1;
+
+var initX = 50;
+var initY = 50;
+var currX = initX;
+var currY = initY;
+
+var theGame;
+var gameOn = 0;
+var points = 0;
+
+var canvasWidth = document.getElementById("mygame").width;
+var canvasHeight= document.getElementById("mygame").height;
+
+var playerImage;
+
+var canvas = document.getElementById("mygame");
+var ctx = canvas.getContext("2d");
+
+function setUp()
+{
+	currX = initX;
+	currY = initY;
+    lastBar = nBars-1;
+	gameOn = 0;
+	points = 0;	
+    
+    for(i=0;i<nBars;i++)
+    {
+    	barPosition[i] = canvasWidth/2 + i*barDistance;
+        var gap = Math.random()*imgSize + barMinGap;
+        //random function returns a random number between [0, 1)
+        barLength1[i] = (canvasHeight-gap)*Math.random();
+        barLength2[i] = canvasHeight - gap - barLength1[i];
+    }
+    
+    playerImage = document.getElementById("carright");
+    
+    drawEverything();
+}
+
+function drawEverything()
+{
+	ctx.drawImage(playerImage,currX, currY, imgSize, imgSize);
+    for(i=0;i<nBars;i++)
+    {
+    	drawBar(barPosition[i], 0, barPosition[i], barLength1[i]);
+        drawBar(barPosition[i], canvasHeight, 
+        						barPosition[i], canvasHeight-barLength2[i]);
+    }
+    
+    ctx.fillStyle = "green";
+    ctx.font = "40px Arial";
+    ctx.fillText(points, canvasWidth-100, 50);
+}
+
+function eraseEverything(){
+	ctx.fillStyle = document.getElementById("mygame").style.backgroundColor;
+    ctx.fillRect(0,0,canvasWidth,canvasHeight);
+}
+
+function drawBar(p1x, p1y, p2x, p2y)
+{
+	ctx.strokeStyle = "blue";
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.lineWidth = barWidth;
+    ctx.stroke();
+}
+
+setUp();
+
+function startGame(){
+	if(gameOn == 0){
+    	setUp();
+        theGame = setInterval(playGame, 100);
+        gameOn = 1;
+        document.getElementById("start").disabled=true;
+        document.getElementById("start").blur(); 
+    }
+}
+
+function playGame(){
+	eraseEverything();
+	moveBars();
+    drawEverything();
+    
+    if(gameOver() == true){
+    	clearInterval(theGame);
+        ctx.font = "50px Arial";
+        ctx.fillStyle = "red";
+        ctx.fillText("You Lost!", 250, 250);
+        ctx.fillText("Play Again?", 250, 300);
+        gameOn = 0;
+        document.getElementById("start").disabled = false;
+    }
+}
+
+function moveBars(){
+	for(i=0;i<nBars;i++){
+    	barPosition[i] -= barSpeed;
+        if(barPosition[i]<0){
+        	barPosition[i] = barPosition[lastBar] + barDistance;
+            lastBar = i;
+            
+            var gap = Math.random()*imgSize + barMinGap;
+        	//random function returns a random number between [0, 1)
+        	barLength1[i] = (canvasHeight-gap)*Math.random();
+        	barLength2[i] = canvasHeight - gap - barLength1[i];
+            
+            points += 10;
+        }
+    }
+}
+
+function movePlayer(event){
+	//event.which
+    //event.keyCode
+    //Arrow left: 37, Up: 38, Right: 39, Down:40
+    if(event.keyCode == 37 || event.which==65){ //left
+    	if(currX >= playerSpeed){
+        	currX -= playerSpeed;
+        }
+        else{
+        	currX=0;
+        }
+        playerImage = document.getElementById("carleft");
+    }
+    else if(event.keyCode == 38 || event.which==87){ //up
+    	if(currY >= playerSpeed){
+        	currY -= playerSpeed;
+        }
+        else{
+        	currY=0;
+        }
+        playerImage = document.getElementById("carup");
+    }
+    else if(event.keyCode == 39 || event.which==68){ //right
+    	if(currX <= canvasWidth-imgSize-playerSpeed){
+        	currX += playerSpeed;
+        }
+        else{
+        	currX=0;
+        }
+        playerImage = document.getElementById("carright");
+    }
+    else if(event.keyCode == 40 || event.which==83){ //down
+    	if(currY <= canvasHeight-imgSize-playerSpeed){
+        	currY += playerSpeed;
+        }
+        else{
+        	currY = canvasHeight-imgSize;
+        }
+        playerImage = document.getElementById("cardown");
+    }
+}
+
+function gameOver()
+{
+	for(i=0;i<nBars;i++)
+    {
+    	if(currX <= barPosition[i] && barPosition[i] <= currX+imgSize)
+        {
+        	if(currY <= barLength1[i] || currY+imgSize >= canvasHeight-barLength2[i])
+            	return true;
+        }
+    }
+    return false;
+}
+</script>
+</body>
+</html>
